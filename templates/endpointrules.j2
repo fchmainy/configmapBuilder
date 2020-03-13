@@ -1,0 +1,23 @@
+{
+	"name": "forward_to_{{fqdn}}_pool",
+	"conditions": [
+		{
+		"type": "httpHost",
+		"host": {
+                        "operand": "is",
+                        "values": [
+                          "{{fqdn}}"
+                        ]
+                      }
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": "forward",
+                      "event": "request",
+                      "select": {
+                            "pool": { "use": "{{fqdn}}_pool" }
+                                }
+                    }
+                  ]
+}

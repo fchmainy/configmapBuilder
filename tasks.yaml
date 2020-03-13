@@ -1,0 +1,39 @@
+---
+- hosts: me
+  connection: local
+  gather_facts: no
+
+  vars:
+    fqdn: app1.f5demo.com
+    appName: app1
+    appFolder: APPS
+    tenant: TENANT1
+ 
+  tasks:
+    - name: pool
+      template:
+        src: ./templates/pool.j2
+        dest: ./workspace/{{ appName }}_pool.json
+
+    - name: LTM policy rule
+      template:
+        src: ./templates/endpointrules.j2
+        dest: ./workspace/{{ appName }}_policyRules.json
+
+    - name: putting everything together
+      command: ../addNewApp.py -d as3_declaration.json -t {{ tenant }} -n {{ appFolder }} -p {{ fqdn }}_pool -q {{ appName }}_pool.json -e forward_policy -f {{ appName }}_policyRules.json -o as3_declaration.json
+      args:
+        chdir: ./workspace/
+
+    - name: put the content of declaration to stdout
+      shell: cat ./workspace/as3_declaration.json
+      register: res
+
+    - name: save variable
+      set_fact:
+        as3_declaration: "{{ res.stdout | from_json }}"
+
+    - name: rebuilding the configmap
+      template: 
+        src: ./templates/configmap.yaml.j2
+        dest: ./workspace/configmap.yaml
